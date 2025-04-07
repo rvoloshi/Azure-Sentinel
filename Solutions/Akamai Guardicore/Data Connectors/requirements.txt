@@ -1,0 +1,8 @@
+# DO NOT include azure-functions-worker in this file
+# The Python Worker is managed by Azure Functions platform
+# Manually managing azure-functions-worker may cause unexpected issues
+
+azure-functions-durable==1.2.10
+azure-functions==1.22.1
+requests==2.32.3
+jwt==1.3.1
