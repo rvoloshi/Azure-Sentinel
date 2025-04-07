@@ -26,7 +26,7 @@ async def incident_fetching(azure_connection: AzureSentinel,  connections_last_t
         connections_last_time = connections_last_time.timestamp() * 1000
 
     last_connection_time = int(connections_last_time)
-    logging.info(f"from_time: {connections_last_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
+    logging.info(f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
             endpoint=f'{url}/api/v3.0/incidents',
             request_type='GET',

@@ -27,13 +27,14 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
 
     last_connection_time = int(connections_last_time)
     logging.info(
-        f"from_time: {connections_last_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
+        f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
             endpoint=f'{url}/api/v3.0/connections',
             request_type='GET',
             params={
                 'from_time': last_connection_time,
                 'to_time': int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000,
+                'sort': '-slot_start_time'
             },
             authentication=authentication_object).items():
         entities_found += 1

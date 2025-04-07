@@ -11,7 +11,7 @@ class GuardicoreConnection(BaseModel):
     has_mismatch_alert: bool
     connector_dest_rule_id: Optional[str]
     connector_source_rule_id: Optional[str]
-    TimeGenerated: str = Field(alias='db_insert_time')
+    TimeGenerated: str = Field(alias='slot_start_time')
     original_policy_verdict: str
     policy_rule: str
     policy_ruleset: Optional[str]
