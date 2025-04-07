@@ -16,7 +16,7 @@ class Asset(BaseModel):
 class GuardicoreIncident(BaseModel):
     id: str = Field(alias='_id')
     sensor_type: str
-    TimeGenerated: str = Field(alias='start_time')
+    TimeGenerated: int = Field(alias='start_time')
     end_time: int
     last_updated_time: int
     ended: bool

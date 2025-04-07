@@ -3,9 +3,9 @@ import base64
 import hmac
 import hashlib
 import logging
-from threading import Lock
+from asyncio import Lock
 
-import requests
+import aiohttp
 from datetime import datetime
 
 
@@ -35,12 +35,12 @@ class AzureSentinel:
             self._workspace_id, encoded_hash)
         return authorization
 
-    def post_data(self, body: str, log_type: str):
+    async def post_data(self, body: str, log_type: str):
         logging.info('constructing post to send to Azure Sentinel.')
         method = 'POST'
         content_type = 'application/json'
         resource = '/api/logs'
-        with self._lock:
+        async with self._lock:
             rfc1123date = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
             content_length = len(body)
             signature = self.build_signature(
@@ -53,13 +53,13 @@ class AzureSentinel:
                 'x-ms-date': rfc1123date
             }
             logging.info('Sending post to Azure Sentinel.')
-            response = requests.post(uri, data=body, headers=headers)
-            logging.info(response.status_code)
-            if 200 <= response.status_code <= 299:
-                logging.info(f"{response.content} XDD")
-                return response.status_code
-            else:
-                logging.warning("Events are not processed into Azure. Response code: {}".format(
-                    response.status_code))
-                raise Exception(
-                    f'Sending to Azure Sentinel failed with status code {response.status_code}')
+            async with aiohttp.ClientSession() as session:
+                async with session.post(uri, data=body, headers=headers) as response:
+                    logging.info(response.status)
+                    if 200 <= response.status <= 299:
+                        return response.status
+                    else:
+                        logging.warning("Events are not processed into Azure. Response code: {}".format(
+                            response.status))
+                        raise Exception(
+                            f'Sending to Azure Sentinel failed with status code {response.status}')
