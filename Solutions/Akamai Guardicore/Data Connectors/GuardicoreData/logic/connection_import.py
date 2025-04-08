@@ -41,8 +41,9 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
         try:
             items_batch.append(GuardicoreConnection(**item).model_dump_json())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
-                logging.info(f"Posting {len(items_batch)} items to Sentinel")
+                logging.info(f"Posting {len(items_batch)} connections to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreConnections')
+                logging.info(f"Posted {len(items_batch)} connections to Sentinel")
                 items_batch.clear()
             last_connection_time = int(datetime.datetime.fromisoformat(item['db_insert_time']).timestamp()) * 1000
         except Exception as e:

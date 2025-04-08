@@ -11,7 +11,7 @@ from GuardicoreData.models.incident import GuardicoreIncident
 SENTINEL_BATCH_SIZE = 1000
 
 
-async def incident_fetching(azure_connection: AzureSentinel,  connections_last_time: int = 0):
+async def incident_fetching(azure_connection: AzureSentinel, connections_last_time: int = 0):
     logging.info('Starting incident import')
     url = os.environ.get('GuardicoreUrl', '')
     authentication_object = GuardicoreAuth(
@@ -26,7 +26,8 @@ async def incident_fetching(azure_connection: AzureSentinel,  connections_last_t
         connections_last_time = connections_last_time.timestamp() * 1000
 
     last_connection_time = int(connections_last_time)
-    logging.info(f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
+    logging.info(
+        f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
             endpoint=f'{url}/api/v3.0/incidents',
             request_type='GET',
@@ -39,10 +40,13 @@ async def incident_fetching(azure_connection: AzureSentinel,  connections_last_t
         try:
             items_batch.append(GuardicoreIncident(**item).model_dump_json())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
-                logging.info(f"Posting {len(items_batch)} items to Sentinel")
+                logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
+                logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
                 items_batch.clear()
-            last_connection_time = int(item['start_time'])
+            event_time = int(item['start_time'])
+            if event_time > last_connection_time:
+                last_connection_time = event_time
         except Exception as e:
             logging.info(type(e))
             logging.error(f"Failed to post data to Sentinel: {e}")
