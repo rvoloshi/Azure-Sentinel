@@ -41,7 +41,7 @@ async def incident_fetching(azure_connection: AzureSentinel, connections_last_ti
             items_batch.append(GuardicoreIncident(**item).model_dump())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
                 logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
-                await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
+                await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreRawIncidents')
                 logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
                 items_batch.clear()
             event_time = int(item['start_time'])
@@ -55,7 +55,7 @@ async def incident_fetching(azure_connection: AzureSentinel, connections_last_ti
     if len(items_batch) > 0:
         try:
             logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
-            await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
+            await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreRawIncidents')
             logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
         except Exception as e:
             logging.info(type(e))
