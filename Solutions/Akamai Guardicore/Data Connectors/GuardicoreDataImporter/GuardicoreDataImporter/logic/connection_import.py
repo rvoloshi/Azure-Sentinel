@@ -26,6 +26,7 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
         connections_last_time = connections_last_time.timestamp() * 1000
 
     last_connection_time = int(connections_last_time)
+    logging.info(f"Last connection time: {last_connection_time}")
     logging.info(
         f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
@@ -34,18 +35,20 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
             params={
                 'from_time': last_connection_time,
                 'to_time': int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000,
-                'sort': '-slot_start_time'
+                'sort': 'slot_start_time'
             },
             authentication=authentication_object).items():
         entities_found += 1
         try:
-            items_batch.append(GuardicoreConnection(**item).model_dump_json())
+            items_batch.append(GuardicoreConnection(**item).model_dump())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
                 logging.info(f"Posting {len(items_batch)} connections to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreConnections')
                 logging.info(f"Posted {len(items_batch)} connections to Sentinel")
                 items_batch.clear()
-            last_connection_time = int(datetime.datetime.fromisoformat(item['db_insert_time']).timestamp()) * 1000
+            potential_next_conn_time = int(item['slot_start_time']) + 1
+            if potential_next_conn_time > last_connection_time:
+                last_connection_time = potential_next_conn_time
         except Exception as e:
             logging.info(type(e))
             logging.error(f"Failed to post data to Sentinel: {e}")

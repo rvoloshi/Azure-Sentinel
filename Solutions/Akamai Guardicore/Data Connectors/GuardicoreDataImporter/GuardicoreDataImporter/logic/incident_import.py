@@ -38,7 +38,7 @@ async def incident_fetching(azure_connection: AzureSentinel, connections_last_ti
             authentication=authentication_object).items():
         entities_processed += 1
         try:
-            items_batch.append(GuardicoreIncident(**item).model_dump_json())
+            items_batch.append(GuardicoreIncident(**item).model_dump())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
                 logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
@@ -46,7 +46,7 @@ async def incident_fetching(azure_connection: AzureSentinel, connections_last_ti
                 items_batch.clear()
             event_time = int(item['start_time'])
             if event_time > last_connection_time:
-                last_connection_time = event_time
+                last_connection_time = event_time + 1
         except Exception as e:
             logging.info(type(e))
             logging.error(f"Failed to post data to Sentinel: {e}")

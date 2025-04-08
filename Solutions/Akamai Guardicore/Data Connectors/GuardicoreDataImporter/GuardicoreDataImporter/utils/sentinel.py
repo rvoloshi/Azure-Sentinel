@@ -55,7 +55,7 @@ class AzureSentinel:
             logging.info('Sending post to Azure Sentinel.')
             async with aiohttp.ClientSession() as session:
                 async with session.post(uri, data=body, headers=headers) as response:
-                    logging.info(f"Sent data to {log_type} with status: {response.status}")
+                    logging.info(f"Sent data to {log_type} with status: {response.status}, {await response.content.read()}")
                     if 200 <= response.status <= 299:
                         return response.status
                     else:
