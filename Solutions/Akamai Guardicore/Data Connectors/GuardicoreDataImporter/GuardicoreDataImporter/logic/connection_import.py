@@ -3,10 +3,10 @@ import json
 import logging
 import os
 
-from GuardicoreDataImporter.GuardicoreDataImporter.utils.authentication import GuardicoreAuth
-from GuardicoreDataImporter.GuardicoreDataImporter.utils.pagination import PaginatedResponse
-from GuardicoreDataImporter.GuardicoreDataImporter.utils.sentinel import AzureSentinel
-from GuardicoreDataImporter.GuardicoreDataImporter.models.connection import GuardicoreConnection
+from GuardicoreDataImporter.utils.authentication import GuardicoreAuth
+from GuardicoreDataImporter.utils.pagination import PaginatedResponse
+from GuardicoreDataImporter.utils.sentinel import AzureSentinel
+from GuardicoreDataImporter.models.connection import GuardicoreConnection
 
 SENTINEL_BATCH_SIZE = 1000
 
