@@ -2,9 +2,9 @@ import asyncio
 import logging
 import os
 
-from GuardicoreData.utils.sentinel import AzureSentinel
-from GuardicoreData.logic.incident_import import incident_fetching
-from GuardicoreData.logic.connection_import import connection_fetching
+from GuardicoreDataImporter.GuardicoreDataImporter.utils.sentinel import AzureSentinel
+from GuardicoreDataImporter.GuardicoreDataImporter.logic.incident_import import incident_fetching
+from GuardicoreDataImporter.GuardicoreDataImporter.logic.connection_import import connection_fetching
 import azure.durable_functions as df
 
 

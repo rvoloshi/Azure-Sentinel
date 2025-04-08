@@ -14,7 +14,7 @@ async def main(timer: func.TimerRequest, starter: str) -> None:
                                                                               df.OrchestrationRuntimeStatus.Failed,
                                                                               df.OrchestrationRuntimeStatus.Terminated,
                                                                               None]:
-        await client.start_new("GuardicoreData", instance_id)
+        await client.start_new("GuardicoreDataImporter", instance_id)
         logging.info(f"Starting new orchestration")
     else:
         logging.info(

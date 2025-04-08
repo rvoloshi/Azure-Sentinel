@@ -3,17 +3,16 @@ import json
 import logging
 import os
 
-from GuardicoreData.utils.authentication import GuardicoreAuth
-from GuardicoreData.utils.pagination import PaginatedResponse
-from GuardicoreData.utils.sentinel import AzureSentinel
-from GuardicoreData.models.connection import GuardicoreConnection
+from GuardicoreDataImporter.utils.authentication import GuardicoreAuth
+from GuardicoreDataImporter.utils.pagination import PaginatedResponse
+from GuardicoreDataImporter.utils.sentinel import AzureSentinel
+from GuardicoreDataImporter.models.incident import GuardicoreIncident
 
 SENTINEL_BATCH_SIZE = 1000
 
 
-async def connection_fetching(azure_connection: AzureSentinel, connections_last_time: int = 0):
-    logging.info('Starting connection import')
-    entities_found = 0
+async def incident_fetching(azure_connection: AzureSentinel, connections_last_time: int = 0):
+    logging.info('Starting incident import')
     url = os.environ.get('GuardicoreUrl', '')
     authentication_object = GuardicoreAuth(
         url=url,
@@ -21,6 +20,7 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
         password=os.environ.get('GuardicorePassword', '')
     )
     items_batch = []
+    entities_processed = 0
     if connections_last_time == 0:
         connections_last_time = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=5)
         connections_last_time = connections_last_time.timestamp() * 1000
@@ -29,23 +29,24 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
     logging.info(
         f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
-            endpoint=f'{url}/api/v3.0/connections',
+            endpoint=f'{url}/api/v3.0/incidents',
             request_type='GET',
             params={
                 'from_time': last_connection_time,
                 'to_time': int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000,
-                'sort': '-slot_start_time'
             },
             authentication=authentication_object).items():
-        entities_found += 1
+        entities_processed += 1
         try:
-            items_batch.append(GuardicoreConnection(**item).model_dump_json())
+            items_batch.append(GuardicoreIncident(**item).model_dump_json())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
-                logging.info(f"Posting {len(items_batch)} connections to Sentinel")
-                await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreConnections')
-                logging.info(f"Posted {len(items_batch)} connections to Sentinel")
+                logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
+                await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
+                logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
                 items_batch.clear()
-            last_connection_time = int(datetime.datetime.fromisoformat(item['db_insert_time']).timestamp()) * 1000
+            event_time = int(item['start_time'])
+            if event_time > last_connection_time:
+                last_connection_time = event_time
         except Exception as e:
             logging.info(type(e))
             logging.error(f"Failed to post data to Sentinel: {e}")
@@ -53,10 +54,12 @@ async def connection_fetching(azure_connection: AzureSentinel, connections_last_
 
     if len(items_batch) > 0:
         try:
-            await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreConnections')
+            logging.info(f"Posting {len(items_batch)} incidents to Sentinel")
+            await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
+            logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
         except Exception as e:
             logging.info(type(e))
             logging.error(f"Failed to post data to Sentinel: {e}")
             logging.error(f"Failed data: {items_batch}")
-    logging.info(f"Processed {entities_found} connections")
+    logging.info(f"Processed {entities_processed} incidents")
     return last_connection_time
