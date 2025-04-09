@@ -5,7 +5,7 @@ from http import HTTPStatus
 import aiohttp
 from typing import Final, AsyncGenerator
 
-from GuardicoreDataImporter.utils.authentication import GuardicoreAuth
+from .authentication import GuardicoreAuth
 
 
 class PaginatedResponse:

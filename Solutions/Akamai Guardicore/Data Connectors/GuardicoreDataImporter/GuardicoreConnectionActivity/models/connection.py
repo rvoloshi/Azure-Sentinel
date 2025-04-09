@@ -1,7 +1,6 @@
-import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
 
 class GuardicoreConnection(BaseModel):
@@ -13,7 +12,7 @@ class GuardicoreConnection(BaseModel):
     has_mismatch_alert: bool
     connector_dest_rule_id: Optional[str]
     connector_source_rule_id: Optional[str]
-    TimeGenerated: str = Field(alias='slot_start_time')
+    slot_start_time: int
     original_policy_verdict: str
     policy_rule: str
     policy_ruleset: Optional[str]
@@ -39,10 +38,6 @@ class GuardicoreConnection(BaseModel):
     destination_windows_service_display_name: Optional[str]
     destination_windows_service_name: Optional[str]
     violates_policy: bool
-
-    @field_validator('TimeGenerated', mode="before")
-    def slot_start_time_validator(cls, value: int) -> str:
-        return datetime.datetime.fromtimestamp(int(value) // 1000, tz=datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     class Config:
         extra = "ignore"
