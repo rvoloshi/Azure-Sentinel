@@ -7,7 +7,6 @@ class GuardicoreConnection(BaseModel):
     id: str
     connection_type: str
     count: int
-    incidents: bool
     ip_protocol: str
     has_mismatch_alert: bool
     connector_dest_rule_id: Optional[str]
