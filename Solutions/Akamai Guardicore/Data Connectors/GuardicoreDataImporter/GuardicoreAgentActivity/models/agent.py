@@ -33,8 +33,10 @@ class Aggregator(BaseModel):
 class AgentHealth(BaseModel):
     aggregator: Aggregator
     aggregator_component_id: str
-    capabilities: List[Capability]
+    capabilities: Optional[List[Capability]] = []  # Make capabilities optional
     status: str
+    default_operating_mode: Optional[Any] = None
+    dump_present: Optional[bool] = False
 
 
 class Health(BaseModel):
@@ -42,11 +44,16 @@ class Health(BaseModel):
     deception_agent: AgentHealth
     enforcement_agent: AgentHealth
     reveal_agent: AgentHealth
+    access_agent: Optional[AgentHealth] = None
+    detection_agent: Optional[AgentHealth] = None
 
 
 class StatusFlag(BaseModel):
     flag_type: str
-    last_seen_time: bool
+    raised_time: Optional[int] = None
+    severity: Optional[str] = None
+    description: Optional[str] = None
+    details: Optional[Dict[str, Any]] = {}
 
 
 class GuardicoreAgent(BaseModel):
