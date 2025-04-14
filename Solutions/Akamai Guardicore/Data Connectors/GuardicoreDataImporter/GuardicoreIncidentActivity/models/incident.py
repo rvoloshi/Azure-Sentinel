@@ -1,39 +1,52 @@
-from typing import Optional, Any
+from typing import Optional, List
+from pydantic import BaseModel
 
-from pydantic import BaseModel, Field
+
+class Metadata(BaseModel):
+    internal: Optional[bool] = False
+    country_code: Optional[str] = None
+    country: Optional[str] = None
+    display_name: Optional[str] = None
 
 
-class Asset(BaseModel):
-    ip: str
-    vm_id: Optional[str] = None
-    vm: Optional[dict[str, Any]] = None
-    is_inner: bool
+class PropertyData(BaseModel):
+    type: str
+    key: str
+    value: str
+    metadata: Optional[Metadata] = None
 
-    class Config:
-        extra = "ignore"
+
+class Properties(BaseModel):
+    data: List[PropertyData]
+    count: int
+
+
+class TagData(BaseModel):
+    data: List[str]
+    count: int
+
+
+class AffectedAssetData(BaseModel):
+    type: str
+    value: str
+    display_name: str
+
+
+class AffectedAssets(BaseModel):
+    data: List[AffectedAssetData]
+    count: int
 
 
 class GuardicoreIncident(BaseModel):
-    id: str = Field(alias='_id')
-    sensor_type: str
-    start_time: int
-    end_time: int
-    last_updated_time: int
-    ended: bool
-    severity: int
-    affected_assets: list[Asset]
-    enriched: bool
-    reenrich_count: int
-    similarity_calculated: bool
-    is_experimental: bool
-    original_id: str
-    experimental_id: str
-    policy_revision: int
-    incident_type: str
-    has_export: bool
-    direction: str
-    source_asset: Asset
-    destination_asset: Asset
+    id: str
+    type: str
+    severity: str
+    affected_assets: AffectedAssets
+    description: str
+    tags: TagData
+    time: int
+    is_legacy: bool
+    properties: Properties
 
     class Config:
         extra = "ignore"

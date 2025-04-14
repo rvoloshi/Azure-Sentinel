@@ -1,6 +1,6 @@
 from typing import Optional, Any, List, Dict
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, field_serializer
 
 
 class WorkSite(BaseModel):
@@ -96,13 +96,14 @@ class Author(BaseModel):
 
 
 class GuardicorePolicyRule(BaseModel):
+    sampling_timestamp: int
     attributes: Optional[Attributes] = None
     icmp_matches: List[ICMPCode] = []
     ports: List[int] = []
     enabled: bool
     last_change_time: datetime
     section_position: str
-    comments: Optional[str] = None
+    comments: Optional[str] = ""
     destination: EndpointDefinition
     creation_time: datetime
     exclude_ports: List[int] = []
@@ -122,5 +123,11 @@ class GuardicorePolicyRule(BaseModel):
     ip_protocols: List[str] = []
     author: Author
 
+
+    @field_serializer('creation_time', 'last_change_time', 'hit_count_reset_time', 'last_hit')
+    def serialize_datetime(self, dt: datetime | None) -> str | None:
+        if dt is None:
+            return None
+        return dt.strftime('%a, %d %b %Y %H:%M:%S GMT')
     class Config:
         extra = "ignore"

@@ -36,7 +36,7 @@ async def main(name: str):
     logging.info(
         f"from_time: {last_connection_time}, to_time: {int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000}")
     async for item in PaginatedResponse(
-            endpoint=f'{url}/api/v3.0/incidents',
+            endpoint=f'{url}/api/v3.0/generic-incidents',
             request_type='GET',
             params={
                 'from_time': last_connection_time,
@@ -51,7 +51,7 @@ async def main(name: str):
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicoreIncidents')
                 logging.info(f"Posted {len(items_batch)} incidents to Sentinel")
                 items_batch.clear()
-            event_time = int(item['start_time'])
+            event_time = int(item['time'])
             if event_time > last_connection_time:
                 last_connection_time = event_time + 1
         except Exception as e:

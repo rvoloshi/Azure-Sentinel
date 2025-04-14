@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -25,13 +26,15 @@ async def main(name: str):
         password=os.environ.get('GuardicorePassword', '')
     )
     items_batch = []
+    sampling_timestamp = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
     async for item in PaginatedResponse(
         endpoint=f'{url}/api/v4.0/visibility/policy/rules',
         request_type='GET',
         authentication=authentication_object).items():
         entities_found += 1
         try:
-            items_batch.append(GuardicorePolicyRule(**item).model_dump())
+            full_data = {**item, 'sampling_timestamp': sampling_timestamp}
+            items_batch.append(GuardicorePolicyRule(**full_data).model_dump())
             if len(items_batch) >= SENTINEL_BATCH_SIZE:
                 logging.info(f"Posting {len(items_batch)} policy rules to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type='GuardicorePolicyRules')

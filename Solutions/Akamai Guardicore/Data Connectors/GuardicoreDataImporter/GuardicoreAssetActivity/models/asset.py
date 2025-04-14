@@ -23,7 +23,6 @@ class GuardicoreAsset(BaseModel):
     first_seen: int
     hw_uuid: Optional[str] = ""
     is_agent_installed: Optional[bool] = False
-    is_foreign: bool
     is_on: bool
     label_groups: List[LabelGroup]
     last_guest_agent_details_update: Optional[int] = 0
