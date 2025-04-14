@@ -14,6 +14,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         context.call_activity("GuardicoreIncidentActivity", incident_last_time),
         context.call_activity("GuardicoreAssetActivity", "Orchestrator"),
         context.call_activity("GuardicorePolicyEntity", "Orchestrator"),
+        context.call_activity("GuardicoreAgentActivity", "Orchestrator"),
     ]
     result_data = yield context.task_all(tasks)
     connections_last_time_updated = result_data[0]
