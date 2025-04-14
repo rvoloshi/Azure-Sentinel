@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -17,21 +17,21 @@ class LabelGroup(BaseModel):
 class GuardicoreAsset(BaseModel):
     id: str = Field(alias="_id")
     active: bool
-    bios_uuid: str
-    component_cluster_id: str
-    doc_version: int
+    bios_uuid: Optional[str] = ""
+    component_cluster_id: Optional[str] = ""
+    doc_version: Optional[int] = 0
     first_seen: int
-    hw_uuid: str
-    is_agent_installed: bool
+    hw_uuid: Optional[str] = ""
+    is_agent_installed: Optional[bool] = False
     is_foreign: bool
     is_on: bool
     label_groups: List[LabelGroup]
-    last_guest_agent_details_update: int
+    last_guest_agent_details_update: Optional[int] = 0
     last_seen: int
     name: str
     replicated_labels: List[str]
     revision: int
-    sync_revision: int
+    sync_revision: Optional[int] = 0
     vm_name: str
     vm_id: str
     ip_addresses: List[str]
@@ -39,7 +39,7 @@ class GuardicoreAsset(BaseModel):
     full_name: str
     status: str
     comments: str
-    agent_id: str
+    agent_id: Optional[str] = ""
     labels: List[Label]
 
     class Config:
