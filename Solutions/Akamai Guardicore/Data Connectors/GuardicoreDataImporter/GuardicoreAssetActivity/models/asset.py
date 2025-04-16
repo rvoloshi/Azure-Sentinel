@@ -15,6 +15,7 @@ class LabelGroup(BaseModel):
 
 
 class GuardicoreAsset(BaseModel):
+    sampling_timestamp: int
     id: str = Field(alias="_id")
     active: bool
     bios_uuid: Optional[str] = ""
