@@ -1,0 +1,159 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Guardicore Centra\n---"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let startDate = startofday(ago(7d));\nlet endDate = startofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicorePolicyRules_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = startofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| summarize value = count() by day;\n\nall_days\n| join kind=leftouter (daily_counts) on day\n| extend value = coalesce(value, 0)\n| sort by day asc\n| project day = format_datetime(day, 'yyyy-MM-dd'), value",
+              "size": 0,
+              "title": "Active rules (by day)",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "categoricalbar"
+            },
+            "customWidth": "50",
+            "name": "query - 3",
+            "styleSettings": {
+              "maxWidth": "60%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let recentData = GuardicorePolicyRules_CL\n| where TimeGenerated >= ago(24h);\n\nlet max_ts = toscalar(\n    recentData\n    | summarize max(sampling_timestamp_d)\n);\n\nrecentData\n| where sampling_timestamp_d == max_ts\n| summarize count = count() by action_s\n| extend actionFormatted = replace(\"_\", \" \", tolower(action_s))\n| extend actionFormatted = strcat(toupper(substring(actionFormatted, 0, 1)), substring(actionFormatted, 1))\n| project Action = actionFormatted, Count = count",
+              "size": 0,
+              "title": "Rule counts",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "text",
+              "tileSettings": {
+                "showBorder": false
+              },
+              "textSettings": {
+                "style": "title"
+              }
+            },
+            "customWidth": "50",
+            "name": "query - allow-inline",
+            "styleSettings": {
+              "padding": "30",
+              "maxWidth": "20%"
+            }
+          }
+        ]
+      },
+      "name": "NumberGroups"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "loadType": "always",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "GuardicoreConnections_CL\n| where unixtime_milliseconds_todatetime(slot_start_time_d) >= ago(24h)\n| summarize arg_max(TimeGenerated, *) by id_g\n| extend verdict = replace(\"_\", \" \", policy_verdict_s)\n| summarize total_count = sum(count_d) by verdict",
+              "size": 0,
+              "title": "Connections (Past 24 Hours)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "connection-types-chart",
+            "styleSettings": {
+              "maxWidth": "40%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "GuardicoreIncidents_CL \n| where unixtime_milliseconds_todatetime(time_d) >= ago(24h) \n| summarize arg_max(TimeGenerated, *) by id_g\n| extend type = replace(\"_\", \" \", type_s)\n| summarize count() by type",
+              "size": 0,
+              "title": "Incidents by Type (Past 24 Hours)",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "query - 2",
+            "styleSettings": {
+              "maxWidth": "40%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "GuardicoreConnections_CL \n| where unixtime_milliseconds_todatetime(slot_start_time_d) >= ago(24h) \n| summarize arg_max(TimeGenerated, *) by id_g\n| summarize total_count = sum(count_d) by tostring(toint(destination_port_d))\n",
+              "size": 0,
+              "title": "Connection by Destination Port (Past 24 Hours)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "query - 2",
+            "styleSettings": {
+              "maxWidth": "40%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "GuardicoreIncidents_CL \n| where unixtime_milliseconds_todatetime(time_d) >= ago(24h) \n| summarize arg_max(TimeGenerated, *) by id_g\n| extend severity = replace(\"_\", \" \", severity_s)\n| summarize count() by severity",
+              "size": 0,
+              "title": "Incidents by Severity (Past 24 Hours)",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "query - 2",
+            "styleSettings": {
+              "maxWidth": "40%"
+            }
+          }
+        ]
+      },
+      "name": "FirstPieCharts"
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/195e58c9-a052-4f34-aff2-d67c13145f29/resourcegroups/strategicalliances-rg/providers/microsoft.operationalinsights/workspaces/sentinel-integration"
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
