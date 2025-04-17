@@ -13,6 +13,82 @@
       "content": {
         "version": "NotebookGroup/1.0",
         "groupType": "editable",
+        "title": "Agent Health - Only data from the past 7 days is taken into account",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "16e7897b-dcc1-4647-b6d2-f1b92f3a1e74",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "time_quantity",
+                  "type": 1,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "paramValidationRules": [
+                      {
+                        "regExp": "[0-9]+",
+                        "match": true,
+                        "message": "Must be a number"
+                      }
+                    ]
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "9",
+                  "label": "Time Quantity"
+                },
+                {
+                  "id": "5d915662-3c3d-425c-b325-967b8512ddad",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "time_unit",
+                  "label": "Time Unit",
+                  "type": 2,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "jsonData": "[\"Hours\", \"Minutes\", \"Days\"]",
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "Hours"
+                }
+              ],
+              "style": "above",
+              "queryType": 8
+            },
+            "name": "parameters - 4"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let time_amount = case(\n        '{time_unit}' == 'Minutes', timespan('{time_quantity}m'),\n        '{time_unit}' == 'Hours', timespan('{time_quantity}h'),\n        '{time_unit}' == 'Days', timespan('{time_quantity}d'),\n        timespan('24h')\n);\nlet recentData = GuardicoreAgents_CL\n| where TimeGenerated >= ago(7d);\n\nlet max_ts = toscalar(\n    recentData\n    | summarize max(sampling_timestamp_d)\n);\nrecentData\n| where sampling_timestamp_d == max_ts\n| where unixtime_milliseconds_todatetime(last_seen_d) < ago(time_amount)\n| project \n    AgentName = display_name_s, \n    AgentID=asset_id_g, \n    LastSeen = unixtime_milliseconds_todatetime(last_seen_d)",
+              "size": 0,
+              "title": "Current missing agents ",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "customWidth": "50",
+            "name": "query - 1",
+            "styleSettings": {
+              "maxWidth": "25%"
+            }
+          }
+        ]
+      },
+      "name": "Agent group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
         "items": [
           {
             "type": 3,
@@ -79,7 +155,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let timeWindow = 24h;\nlet sourceConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize SourceConnections = tolong(sum(count_d)) by source_node_id_g\n| project AssetId = tostring(source_node_id_g), SourceConnections;\nlet destConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize DestinationConnections = tolong(sum(count_d)) by destination_node_id_g\n| project AssetId = tostring(destination_node_id_g), DestinationConnections;\nlet recentAssetData = GuardicoreAssets_CL\n| where TimeGenerated >= ago(timeWindow);\nlet max_ts = toscalar(\n    recentAssetData\n    | summarize max(sampling_timestamp_d)\n);\nlet latestAssetData = recentAssetData \n| where sampling_timestamp_d == max_ts;\nsourceConnections\n| join kind=fullouter (destConnections) on AssetId\n| extend \n    SourceConnections = iif(isnull(SourceConnections), 0, SourceConnections),\n    DestinationConnections = iif(isnull(DestinationConnections), 0, DestinationConnections),\n    TotalConnections = SourceConnections + DestinationConnections\n| where isnotempty(AssetId) and AssetId != \"\"\n| top 10 by TotalConnections desc\n| join kind=leftouter (\n    latestAssetData\n    | summarize arg_max(TimeGenerated, *) by id_g // Get latest asset record\n    | project AssetId = tostring(id_g), AssetName = name_s, IPAddresses = ip_addresses_s, Status = status_s\n) on AssetId\n| project AssetId, AssetName, Status, TotalConnections\n| order by TotalConnections desc",
+              "query": "let timeWindow = 24h;\nlet sourceConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize SourceConnections = tolong(sum(count_d)) by source_node_id_g\n| project AssetId = tostring(source_node_id_g), SourceConnections;\nlet destConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize DestinationConnections = tolong(sum(count_d)) by destination_node_id_g\n| project AssetId = tostring(destination_node_id_g), DestinationConnections;\nlet recentAssetData = GuardicoreAssets_CL\n| where TimeGenerated >= ago(timeWindow);\nlet max_ts = toscalar(\n    recentAssetData\n    | summarize max(sampling_timestamp_d)\n);\nlet latestAssetData = recentAssetData \n| where sampling_timestamp_d == max_ts;\nsourceConnections\n| join kind=fullouter (destConnections) on AssetId\n| extend \n    SourceConnections = iif(isnull(SourceConnections), 0, SourceConnections),\n    DestinationConnections = iif(isnull(DestinationConnections), 0, DestinationConnections),\n    TotalConnections = SourceConnections + DestinationConnections\n| where isnotempty(AssetId) and AssetId != \"\"\n| top 10 by TotalConnections desc\n| join kind=leftouter (\n    latestAssetData\n    | summarize arg_max(TimeGenerated, *) by id_g // Get latest asset record\n    | project AssetId = tostring(id_g), AssetName = name_s, IPAddresses = ip_addresses_s, Status = status_s\n) on AssetId\n| project AssetName, Status, TotalConnections, AssetId\n| order by TotalConnections desc",
               "size": 0,
               "title": "Top Talkers of the day",
               "queryType": 0,
