@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Guardicore\n---"
+        "json": "## Guardicore Centra\n---"
       },
       "name": "text - 2"
     },
@@ -88,6 +88,42 @@
             },
             "customWidth": "50",
             "name": "query - 2",
+            "styleSettings": {
+              "maxWidth": "50%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let internetAssets = GuardicoreConnections_CL | where TimeGenerated >= ago(24h) | where source_node_type_s == \"internet\" | where destination_node_type_s == \"asset\" | distinct destination_node_id_g; let recentLabelData = GuardicoreLabels_CL | where TimeGenerated >= ago(24h); let max_ts = toscalar( recentLabelData | summarize max(sampling_timestamp_d) ); let latest_label_data = recentLabelData | where sampling_timestamp_d == max_ts;\n\nlatest_label_data | mv-expand static_asset = parse_json(static_assets_s) | extend static_asset_id = tostring(static_asset.id) | where static_asset_id in (internetAssets) | project TimeGenerated, LabelId = id_g, LabelName = name_s, LabelKey = key_s, LabelValue = value_s, AssetId = static_asset_id, AssetName = tostring(static_asset.name) | union ( GuardicoreLabels_CL | where TimeGenerated >= ago(24h) | mv-expand dynamic_asset = parse_json(dynamic_assets_s) | extend dynamic_asset_id = tostring(dynamic_asset.id) | where dynamic_asset_id in (internetAssets) | project TimeGenerated, LabelId = id_g, LabelName = name_s, LabelKey = key_s, LabelValue = value_s, AssetId = dynamic_asset_id, AssetName = tostring(dynamic_asset.name) ) | summarize arg_max(TimeGenerated, *) by LabelId, AssetId | project LabelId, LabelKey, LabelValue, AssetId, AssetName",
+              "size": 0,
+              "title": "Public Facing assets (Grouped by labels)",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LabelId",
+                    "formatter": 5
+                  }
+                ],
+                "hierarchySettings": {
+                  "treeType": 1,
+                  "groupBy": [
+                    "LabelKey",
+                    "LabelValue"
+                  ],
+                  "expandTopLevel": true
+                }
+              }
+            },
+            "customWidth": "50",
+            "name": "query - 3",
             "styleSettings": {
               "maxWidth": "50%"
             }
