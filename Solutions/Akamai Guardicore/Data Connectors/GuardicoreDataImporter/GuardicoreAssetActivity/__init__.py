@@ -7,9 +7,7 @@ async def main(name: str):
         destination_table='GuardicoreAssets',
         api_endpoint='api/v3.0/assets',
         method='GET',
-        params={
-            'status': 'on'
-        },
+        params={},
         model_class=GuardicoreAsset,
         add_sampling_timestamp=True,
     )
