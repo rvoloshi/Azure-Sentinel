@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Guardicore Centra\n---"
+        "json": "## Guardicore\n---"
       },
       "name": "text - 2"
     },
@@ -47,6 +47,20 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "text",
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "Action",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "Action",
+                  "sortOrder": 1
+                }
+              ],
               "tileSettings": {
                 "showBorder": false
               },
@@ -59,6 +73,23 @@
             "styleSettings": {
               "padding": "30",
               "maxWidth": "20%"
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let timeWindow = 24h;\nlet sourceConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize SourceConnections = tolong(sum(count_d)) by source_node_id_g\n| project AssetId = tostring(source_node_id_g), SourceConnections;\nlet destConnections = GuardicoreConnections_CL \n| where TimeGenerated >= ago(timeWindow)\n| distinct source_node_id_g, destination_node_id_g, id_g, count_d, TimeGenerated\n| summarize DestinationConnections = tolong(sum(count_d)) by destination_node_id_g\n| project AssetId = tostring(destination_node_id_g), DestinationConnections;\nlet recentAssetData = GuardicoreAssets_CL\n| where TimeGenerated >= ago(timeWindow);\nlet max_ts = toscalar(\n    recentAssetData\n    | summarize max(sampling_timestamp_d)\n);\nlet latestAssetData = recentAssetData \n| where sampling_timestamp_d == max_ts;\nsourceConnections\n| join kind=fullouter (destConnections) on AssetId\n| extend \n    SourceConnections = iif(isnull(SourceConnections), 0, SourceConnections),\n    DestinationConnections = iif(isnull(DestinationConnections), 0, DestinationConnections),\n    TotalConnections = SourceConnections + DestinationConnections\n| where isnotempty(AssetId) and AssetId != \"\"\n| top 10 by TotalConnections desc\n| join kind=leftouter (\n    latestAssetData\n    | summarize arg_max(TimeGenerated, *) by id_g // Get latest asset record\n    | project AssetId = tostring(id_g), AssetName = name_s, IPAddresses = ip_addresses_s, Status = status_s\n) on AssetId\n| project AssetId, AssetName, Status, TotalConnections\n| order by TotalConnections desc",
+              "size": 0,
+              "title": "Top Talkers of the day",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "query - 2",
+            "styleSettings": {
+              "maxWidth": "50%"
             }
           }
         ]
