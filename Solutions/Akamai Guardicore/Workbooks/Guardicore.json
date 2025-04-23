@@ -132,9 +132,6 @@
               "query": "let startDate = endofday(ago(7d));\nlet endDate = endofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicorePolicyRules_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = endofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| summarize value = count() by day;\n\nall_days\n| join kind=leftouter (daily_counts) on day\n| extend value = coalesce(value, 0)\n| sort by day asc\n| project day = format_datetime(day, 'yyyy-MM-dd'), value",
               "size": 0,
               "title": "Active rules (by day)",
-              "timeContext": {
-                "durationMs": 86400000
-              },
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "categoricalbar"
@@ -230,8 +227,20 @@
                     "LabelValue"
                   ],
                   "expandTopLevel": true
+                },
+                "sortBy": [
+                  {
+                    "itemKey": "LabelKey",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "LabelKey",
+                  "sortOrder": 1
                 }
-              }
+              ]
             },
             "customWidth": "50",
             "name": "query - 3",
@@ -329,7 +338,9 @@
       "name": "FirstPieCharts"
     }
   ],
-  "fallbackResourceIds": [],
+  "fallbackResourceIds": [
+    "/subscriptions/195e58c9-a052-4f34-aff2-d67c13145f29/resourcegroups/strategicalliances-rg/providers/microsoft.operationalinsights/workspaces/sentinel-integration"
+  ],
   "fromTemplateId": "sentinel-UserWorkbook",
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
 }
