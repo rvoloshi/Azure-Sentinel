@@ -1,7 +1,7 @@
 {
 	"publisherId": "akamai",
 	"offerId": "akamai_guardicore_centra",
-	"firstPublishDate": "2022-03-23",
+	"firstPublishDate": "2025-04-23",
 	"providers": ["Akamai"],
 	"categories": {
 		"domains" : ["Security - Microsegmentation"]
