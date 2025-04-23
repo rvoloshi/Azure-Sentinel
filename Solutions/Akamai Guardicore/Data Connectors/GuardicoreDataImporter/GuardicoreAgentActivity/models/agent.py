@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from pydantic import BaseModel, Field
 
 
@@ -31,19 +31,19 @@ class Aggregator(BaseModel):
 
 
 class AgentHealth(BaseModel):
-    aggregator: Aggregator
-    aggregator_component_id: str
-    capabilities: Optional[List[Capability]] = []  # Make capabilities optional
+    aggregator: Optional[Aggregator] = None
+    aggregator_component_id: Optional[str] = None
+    capabilities: Optional[List[Capability]] = []
     status: str
     default_operating_mode: Optional[Any] = None
     dump_present: Optional[bool] = False
 
 
 class Health(BaseModel):
-    controller: AgentHealth
-    deception_agent: AgentHealth
-    enforcement_agent: AgentHealth
-    reveal_agent: AgentHealth
+    controller: Optional[AgentHealth] = None
+    deception_agent: Optional[AgentHealth] = None
+    enforcement_agent: Optional[AgentHealth] = None
+    reveal_agent: Optional[AgentHealth] = None
     access_agent: Optional[AgentHealth] = None
     detection_agent: Optional[AgentHealth] = None
 
@@ -62,7 +62,7 @@ class GuardicoreAgent(BaseModel):
     agent_id: Optional[str] = ""
     asset_id: Optional[str] = ""
     build_commit: Optional[str] = ""
-    build_date: Optional[str] = ""
+    build_date: Optional[Union[str, int]] = ""
     component_id: Optional[str] = ""
     configuration_reported_errors: Optional[Dict[str, Dict[str, str]]] = {}
     configuration_reported_revision: Optional[int] = 0
