@@ -1,6 +1,5 @@
 {
   "scriptFile": "__init__.py",
-  "functionTimeout": "01:00:00",
   "bindings": [
     {
       "name": "name",

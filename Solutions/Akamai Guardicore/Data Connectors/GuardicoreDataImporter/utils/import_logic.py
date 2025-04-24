@@ -8,8 +8,6 @@ from .authentication import GuardicoreAuth
 from .pagination import PaginatedResponse
 from .sentinel import AzureSentinel
 
-SENTINEL_BATCH_SIZE = 1000
-
 
 async def run_import_loop(destination_table: str, api_endpoint: str, method: str, params: dict, model_class: Type,
                           add_sampling_timestamp: bool = False,
@@ -43,7 +41,7 @@ async def run_import_loop(destination_table: str, api_endpoint: str, method: str
             else:
                 full_data = item
             items_batch.append(model_class(**full_data).model_dump())
-            if len(items_batch) >= SENTINEL_BATCH_SIZE:
+            if len(items_batch) >= PaginatedResponse.ENTITIES_PER_PAGE:
                 logging.info(f"Posting {len(items_batch)} entities to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type=destination_table)
                 logging.info(f"Posted {len(items_batch)} entities to Sentinel")

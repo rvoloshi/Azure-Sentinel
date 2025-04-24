@@ -1,12 +1,16 @@
 import datetime
+import os
+import croniter
 from ..utils.import_logic import run_import_loop
 from .models.connection import GuardicoreConnection
-
+import datetime
+from datetime import datetime
 
 async def main(name: str):
     connections_last_time = int(name)
     if connections_last_time == 0:
-        connections_last_time = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=5)
+        scheduled_run = os.environ.get("Schedule", "0 */10 * * * *")
+        connections_last_time = croniter.croniter(scheduled_run, datetime.now(tz=datetime.UTC)).get_prev(datetime)
         connections_last_time = connections_last_time.timestamp() * 1000
 
     last_connection_time = int(connections_last_time)
@@ -17,7 +21,7 @@ async def main(name: str):
         method='GET',
         params={
             'from_time': last_connection_time,
-            'to_time': int(datetime.datetime.now(tz=datetime.UTC).timestamp()) * 1000,
+            'to_time': int(datetime.now(tz=datetime.UTC).timestamp()) * 1000,
             'sort': 'slot_start_time'
         },
         model_class=GuardicoreConnection,

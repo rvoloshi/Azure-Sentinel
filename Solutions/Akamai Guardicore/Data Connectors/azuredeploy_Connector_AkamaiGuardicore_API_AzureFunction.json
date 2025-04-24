@@ -29,9 +29,9 @@
     },
     "Schedule": {
       "type": "string",
-      "defaultValue": "0 0 * * * *",
+      "defaultValue": "0 */10 * * * *",
       "metadata": {
-        "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 * * * *)"
+        "description": "Please enter a valid Quartz cron-expression. (Example: 0 */10 * * * *)"
       }
     },
     "AppInsightsWorkspaceResourceID": {
