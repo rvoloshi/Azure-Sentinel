@@ -9,7 +9,7 @@ from .authentication import GuardicoreAuth
 
 
 class PaginatedResponse:
-    ENTITIES_PER_PAGE: Final[int] = 4000
+    ENTITIES_PER_PAGE: Final[int] = 1000
     METHOD_TYPE_TO_FUNCTION: Final[dict[str, Callable]] = {
         'GET': aiohttp.ClientSession.get,
         'POST': aiohttp.ClientSession.post,

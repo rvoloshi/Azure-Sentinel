@@ -3,7 +3,7 @@ import os
 import croniter
 from ..utils.import_logic import run_import_loop
 from .models.connection import GuardicoreConnection
-import datetime
+from datetime import UTC
 from datetime import datetime
 
 async def main(name: str):
@@ -21,7 +21,7 @@ async def main(name: str):
         method='GET',
         params={
             'from_time': last_connection_time,
-            'to_time': int(datetime.now(tz=datetime.UTC).timestamp()) * 1000,
+            'to_time': int(datetime.now(tz=UTC).timestamp()) * 1000,
             'sort': 'slot_start_time'
         },
         model_class=GuardicoreConnection,
