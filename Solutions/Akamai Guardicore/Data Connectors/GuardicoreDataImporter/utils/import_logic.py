@@ -11,7 +11,8 @@ from .sentinel import AzureSentinel
 
 async def run_import_loop(destination_table: str, api_endpoint: str, method: str, params: dict, model_class: Type,
                           add_sampling_timestamp: bool = False,
-                          field_name_for_last_timestamp: str | None = None) -> str:
+                          field_name_for_last_timestamp: str | None = None,
+                          chunk_size=PaginatedResponse.ENTITIES_PER_PAGE) -> str:
     logging.info(f'Starting import loop for {destination_table}')
     azure_connection = AzureSentinel(
         workspace_id=os.environ.get('SentinelWorkspaceId', ''),
@@ -30,10 +31,11 @@ async def run_import_loop(destination_table: str, api_endpoint: str, method: str
     last_time = 0
 
     async for item in PaginatedResponse(
-        endpoint=f'{url}/{api_endpoint}',
-        request_type=method,
-        params=params,
-        authentication=authentication_object).items():
+            endpoint=f'{url}/{api_endpoint}',
+            request_type=method,
+            params=params,
+            authentication=authentication_object,
+            chunk_size=chunk_size).items():
         entities_found += 1
         try:
             if add_sampling_timestamp:
@@ -41,7 +43,7 @@ async def run_import_loop(destination_table: str, api_endpoint: str, method: str
             else:
                 full_data = item
             items_batch.append(model_class(**full_data).model_dump())
-            if len(items_batch) >= PaginatedResponse.ENTITIES_PER_PAGE:
+            if len(items_batch) >= chunk_size:
                 logging.info(f"Posting {len(items_batch)} entities to Sentinel")
                 await azure_connection.post_data(body=json.dumps(items_batch), log_type=destination_table)
                 logging.info(f"Posted {len(items_batch)} entities to Sentinel")

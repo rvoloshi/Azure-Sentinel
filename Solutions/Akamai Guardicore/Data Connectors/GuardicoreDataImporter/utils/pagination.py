@@ -17,7 +17,7 @@ class PaginatedResponse:
     }
 
     def __init__(self, endpoint: str, request_type: str, authentication: GuardicoreAuth,
-                 headers: dict = None, body: dict = None, params: dict = None):
+                 headers: dict = None, body: dict = None, params: dict = None, chunk_size = ENTITIES_PER_PAGE):
         if headers is None:
             headers = {}
         if params is None:
@@ -29,6 +29,7 @@ class PaginatedResponse:
         self._params = params
         self._headers = headers
         self._body = body
+        self._chunk_size = chunk_size
 
     async def items(self) -> AsyncGenerator[dict, None]:
         entities_found = 0
@@ -38,7 +39,7 @@ class PaginatedResponse:
             while True:
                 self._headers.update(await self._authentication.get_authorization_headers())
                 self._params.update({"offset": entities_found,
-                                     "limit": PaginatedResponse.ENTITIES_PER_PAGE})
+                                     "limit": self._chunk_size})
 
                 async with PaginatedResponse.METHOD_TYPE_TO_FUNCTION[self._request_type](session, self._endpoint,
                                                                                          params=self._params,
@@ -51,7 +52,7 @@ class PaginatedResponse:
                         for item in resp['objects']:
                             yield item
                         entities_found += len(resp['objects'])
-                        if len(resp['objects']) != PaginatedResponse.ENTITIES_PER_PAGE:
+                        if len(resp['objects']) != self._chunk_size:
                             logging.info(f"End of pagination reached for {self._endpoint}")
                             break
                     elif response.status == HTTPStatus.NO_CONTENT:

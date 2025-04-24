@@ -84,7 +84,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let time_amount = case(\n        '{time_unit}' == 'Minutes', timespan('{time_quantity}m'),\n        '{time_unit}' == 'Hours', timespan('{time_quantity}h'),\n        '{time_unit}' == 'Days', timespan('{time_quantity}d'),\n        timespan('24h')\n);\n\nlet startDate = endofday(ago(7d));\nlet endDate = endofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicoreAgents_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = endofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_missing_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| where unixtime_milliseconds_todatetime(last_seen_d) < (day - time_amount)\n| summarize missing_agents = count() by day;\n\nall_days\n| join kind=leftouter (daily_missing_counts) on day\n| extend missing_agents = coalesce(missing_agents, 0)\n| sort by day asc\n| where day > startDate\n| project day = format_datetime(day, 'yyyy-MM-dd'), missing_agents",
+              "query": "let time_amount = case(\n        '{time_unit}' == 'Minutes', timespan('{time_quantity}m'),\n        '{time_unit}' == 'Hours', timespan('{time_quantity}h'),\n        '{time_unit}' == 'Days', timespan('{time_quantity}d'),\n        timespan('24h')\n);\n\nlet startDate = endofday(ago(7d));\nlet endDate = endofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicoreAgents_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = endofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_missing_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| where unixtime_milliseconds_todatetime(last_seen_d) < (day - time_amount)\n| summarize missing_agents = count() by day;\n\nall_days\n| join kind=leftouter (daily_missing_counts) on day\n| extend missing_agents = coalesce(missing_agents, 0)\n| sort by day asc\n| where day > startDate and day != endDate\n| project day = format_datetime(day, 'yyyy-MM-dd'), missing_agents",
               "size": 0,
               "title": "Missing agent count (by date)",
               "queryType": 0,
@@ -112,7 +112,7 @@
             "customWidth": "50",
             "name": "query - 2",
             "styleSettings": {
-              "maxWidth": "30%"
+              "maxWidth": "50%"
             }
           }
         ]
@@ -129,7 +129,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let startDate = endofday(ago(7d));\nlet endDate = endofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicorePolicyRules_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = endofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| summarize value = count() by day;\n\nall_days\n| join kind=leftouter (daily_counts) on day\n| extend value = coalesce(value, 0)\n| sort by day asc\n| where day > startDate \n| project day = format_datetime(day, 'yyyy-MM-dd'), value",
+              "query": "let startDate = endofday(ago(7d));\nlet endDate = endofday(now());\nlet all_days = range day from startDate to endDate step 1d;\n\nlet rawData = GuardicorePolicyRules_CL\n| where TimeGenerated >= startDate\n| extend sampling_ts = unixtime_seconds_todatetime(sampling_timestamp_d)\n| extend day = endofday(sampling_ts);\n\nlet daily_max_ts = rawData\n| summarize max_ts = max(sampling_ts) by day;\n\nlet daily_counts = rawData\n| join kind=inner (\n    daily_max_ts\n) on day, $left.sampling_ts == $right.max_ts\n| summarize value = count() by day;\n\nall_days\n| join kind=leftouter (daily_counts) on day\n| extend value = coalesce(value, 0)\n| sort by day asc\n| where day > startDate and day != endDate\n| project day = format_datetime(day, 'yyyy-MM-dd'), value",
               "size": 0,
               "title": "Active rules (by day)",
               "queryType": 0,
@@ -192,7 +192,21 @@
               "title": "Top Talkers of the day",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
-              "visualization": "table"
+              "visualization": "table",
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "Status",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "Status",
+                  "sortOrder": 1
+                }
+              ]
             },
             "customWidth": "50",
             "name": "query - 2",
